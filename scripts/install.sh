@@ -234,28 +234,38 @@ function check_status(){
 }
 
 while getopts "m:" opt; do
-  case $opt in
-    m)
-      moniker_name=$OPTARG
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -m|--moniker)
+        if [[ -n "$2" && "$2" != -* ]]; then
+          moniker_name="$2"
+          shift 2 
+        else
+          echo "Error: -m|--moniker requires a value" >&2
+          exit 1
+        fi
+        ;;
+      --archive)
+      archive=true
+      shift 1
       ;;
-    \?)
-      echo "Invalid option:  -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG  requires an argument " >&2
+    *)
+      echo "Invalid option: $1" >&2
       exit 1
       ;;
   esac
 done
 
-shift $((OPTIND - 1))
-
-# --archive
-for arg in "$@"; do
-  if [ "$arg" == "--archive" ]; then
-    echo "Archive flag detected, Using archive snapshot"
-    archive=true
+install_deps
+install_cosmovisor
+install_geth
+init_geth
+install_story
+init_story
+init_cosmovisor
+create_story_service
+launch_geth_story
+if [ "$archive" = true ]; then
     if [ "$available_space" -lt "$threshold" ]; then
         echo "Warning: The available disk space is smaller than 500GB. Current available space: ${available_space}GB"
         
@@ -269,19 +279,6 @@ for arg in "$@"; do
             exit 1
         fi
     fi
-   fi
-done
-
-install_deps
-install_cosmovisor
-install_geth
-init_geth
-install_story
-init_story
-init_cosmovisor
-create_story_service
-launch_geth_story
-if [ "$archive" = true ]; then
     download_archive_snapshot
     stop_geth_story
     backup_validator_state
