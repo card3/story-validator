@@ -41,19 +41,19 @@ function install_go(){
     if ! sudo -u root command -v go &> /dev/null
     then
         echo "Start to install Golang environment"
-        # wget  ${GO_DOWNLOAD_URL} -O ${GO_PACKAGE} && \
-        # sudo rm -rf /usr/local/go && \
-        # sudo tar -C /usr/local -xzf ${GO_PACKAGE} && \
-        # rm ${GO_PACKAGE}  && \
+        wget  ${GO_DOWNLOAD_URL} -O ${GO_PACKAGE} && \
+        sudo rm -rf /usr/local/go && \
+        sudo tar -C /usr/local -xzf ${GO_PACKAGE} && \
+        rm ${GO_PACKAGE}  && \
         [ ! -f /root/.bash_profile ] && sudo touch /root/.bash_profile && \
         echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' | sudo tee -a /root/.bash_profile && \
-# sudo tee -a /root/.bashrc << 'EOF'
+sudo tee -a /root/.bashrc << EOF
 
-# # Source .bash_profile if it exists
-# if [ -f ~/.bash_profile ]; then
-#     source ~/.bash_profile
-# fi
-# EOF
+# Source .bash_profile if it exists
+if [ -f ~/.bash_profile ]; then
+    source ~/.bash_profile
+fi
+EOF
 sudo bash -c "source /root/.bash_profile && go version"
     else
         echo "Go is installed for the root user"
@@ -63,7 +63,7 @@ sudo bash -c "source /root/.bash_profile && go version"
 
 # Install Cosmovisor
 function install_cosmovisor(){
-    # install_go
+    install_go
     sudo bash -c "source /root/.bash_profile && go version && \
     go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@${COSMOVISOR_VERSION} "
  
@@ -103,10 +103,6 @@ fi
 function init_geth(){
 create_geth_service
 }
-
-
-
-
 
 function install_story(){
     sudo mkdir -p "$STORY_BINARY_DIR" 
@@ -169,10 +165,6 @@ function init_cosmovisor(){
     # cosmovisor init [path for story binary]
     sudo bash -c "source /root/.bash_profile && cosmovisor init ${STORY_BINARY_DIR}/story"
 }
-
-# function init_story_node(){
-
-# }
 
 function download_prune_snapshot(){
     # download geth snapshot
@@ -251,13 +243,10 @@ install_geth
 init_geth
 install_story
 init_story
-backup_validator_state
 init_cosmovisor
 create_story_service
-# download_prune_snapshot
 download_archive_snapshot
 extract_archive_snapshot
-# extract_prune_snapshot
 restore_validator_state
 launch_geth_story
 check_status
