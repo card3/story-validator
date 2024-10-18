@@ -225,6 +225,9 @@ function stop_geth_story(){
     sudo  systemctl stop story
 }
 function start_geth_story(){
+    #Add seeds
+    PEERS=$(curl -sS https://story-rpc.mandragora.io/net_info | jq -r '.result.peers[] | "\(.node_info.id)@\(.remote_ip):\(.node_info.listen_addr)"' | awk -F ':' '{print $1":"$(NF)}' | paste -sd, -)
+    sudo sed -i.bak -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" /root/.story/story/config/config.toml
     sudo systemctl start geth && \
     sudo  systemctl start story
 }
@@ -235,7 +238,11 @@ function check_status(){
     curl -s localhost:26657/status | jq -r '.result.validator_info'
     echo "======================Current blockheight======================= "
     curl -s localhost:26657/status | jq .result.sync_info.latest_block_height
-    echo "Check logs by using sudo journalctl -u story -f or sudo journalctl -u geth -f"
+    echo "======================Latest 10 line logs for story======================= "
+    sudo journalctl -u story -n 10
+    echo "======================Latest 10 line logs for get======================= "
+    sudo journalctl -u geth -n 10 
+    echo "Get more logs by using sudo journalctl -u story -f or sudo journalctl -u geth -f"
 }
 
 
