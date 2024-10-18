@@ -233,7 +233,7 @@ function check_status(){
     curl -s localhost:26657/status | jq -r '.result.validator_info'
 }
 
-while getopts "m:" opt; do
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     -m|--moniker)
