@@ -230,9 +230,12 @@ function start_geth_story(){
 }
 
 function check_status(){
-    systemctl is-active --quiet story.service || echo "Story is not running, check logs by using sudo journalctl -u story-geth.service -f "
+    systemctl is-active --quiet story.service || echo "Story is not running, check logs by using sudo journalctl -u story -f "
     echo "======================Validator Info======================= "
     curl -s localhost:26657/status | jq -r '.result.validator_info'
+    echo "======================Current blockheight======================= "
+    curl -s localhost:26657/status | jq .result.sync_info.latest_block_height
+    echo "Check logs by using sudo journalctl -u story -f or sudo journalctl -u geth -f"
 }
 
 
