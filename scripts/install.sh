@@ -247,6 +247,5 @@ init_cosmovisor
 create_story_service
 download_archive_snapshot
 extract_archive_snapshot
-restore_validator_state
 launch_geth_story
 check_status
