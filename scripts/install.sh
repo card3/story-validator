@@ -2,13 +2,18 @@
 
 # the moniker (the human-readable identifier for your node)
 moniker_name=""
+archive=false
 
 # GOLANG
 GO_VERSION=1.23.2
 GO_DOWNLOAD_URL=https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
 GO_PACKAGE=go.tar.gz
 
+# check disk  available space
+available_space=$(df --output=avail -BG / | tail -n 1 | tr -d 'G')
 
+# At least 500 GB if use archive snapshot
+threshold=500
 # COSMOVISOR https://docs.cosmos.network/main/build/tooling/cosmovisor#installation
 COSMOVISOR_VERSION=v1.6.0
 
@@ -213,6 +218,14 @@ function launch_geth_story(){
     sudo  systemctl start story
 }
 
+function stop_geth_story(){
+    sudo systemctl stop geth && \
+    sudo  systemctl stop story
+}
+function start_geth_story(){
+    sudo systemctl start geth && \
+    sudo  systemctl start story
+}
 
 function check_status(){
     systemctl is-active --quiet story.service || echo "Story is not running, check logs by using sudo journalctl -u story-geth.service -f "
@@ -236,6 +249,27 @@ while getopts "m:" opt; do
   esac
 done
 
+shift $((OPTIND - 1))
+
+# --archive
+for arg in "$@"; do
+  if [ "$arg" == "--archive" ]; then
+    echo "Archive flag detected, Using archive snapshot"
+    archive=true
+    if [ "$available_space" -lt "$threshold" ]; then
+        echo "Warning: The available disk space is smaller than 500GB. Current available space: ${available_space}GB"
+        
+        read -p "Do you want to continue? (Y/N): " choice
+
+        choice=$(echo "$choice" | tr '[:lower:]' '[:upper:]')
+        if [ "$choice" == "Y" ]; then
+            echo "Continuing operation..."
+        else
+            echo "Operation aborted."
+            exit 1
+        fi
+   fi
+done
 
 install_deps
 install_cosmovisor
@@ -245,7 +279,18 @@ install_story
 init_story
 init_cosmovisor
 create_story_service
-download_archive_snapshot
-extract_archive_snapshot
 launch_geth_story
+if [ "$archive" = true ]; then
+    download_archive_snapshot
+    stop_geth_story
+    backup_validator_state
+    extract_archive_snapshot
+else
+    download_prune_snapshot
+    stop_geth_story
+    backup_validator_state
+    extract_prune_snapshot
+fi
+restore_validator_state
+start_geth_story
 check_status
