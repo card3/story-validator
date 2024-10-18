@@ -268,7 +268,7 @@ for arg in "$@"; do
             echo "Operation aborted."
             exit 1
         fi
-     fi
+    fi
    fi
 done
 
