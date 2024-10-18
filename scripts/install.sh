@@ -200,6 +200,7 @@ function extract_archive_snapshot(){
   sudo rm -rf /root/.story/geth/iliad/geth/chaindata
   lz4 -d -c Geth_snapshot.lz4 | pv | sudo tar xv -C /root/.story/geth/iliad/geth  > /dev/null
   lz4 -d -c Story_snapshot.lz4 | pv | sudo tar xv -C /root/.story/story > /dev/null 
+  sudo rm -rf /root/.story/story/data/upgrade-info.json
 }
 function backup_validator_state(){
     sudo cp /root/.story/story/data/priv_validator_state.json /root/.story/priv_validator_state.json.backup
